@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!-- Startsida för AI-kursen. Tvåspråkig (svenska/engelska), mörkt tema. -->
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <!-- Gör sidan responsiv på mobila enheter -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI-kursen</title>
+
+  <style>
+    /* ---------- Färgvariabler (mörkt tema) ---------- */
+    :root {
+      --bg: #0b0f1a;        /* sidans bakgrund */
+      --text: #e6e9f2;      /* huvudtext */
+      --muted: #9aa3b8;     /* dämpad text */
+      --accent: #38bdf8;    /* accentfärg (cyan) */
+      --accent2: #a78bfa;   /* andra accentfärg (lila) */
+    }
+
+    /* ---------- Grundlayout: centrerar innehållet på skärmen ---------- */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background: radial-gradient(circle at 50% 30%, #16213a 0%, var(--bg) 60%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* ---------- Rubrik med gradienttext ---------- */
+    h1 {
+      margin: 0 0 1rem;
+      font-size: clamp(2rem, 6vw, 4rem);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    p { margin: 0; font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--muted); }
+
+    /* ---------- Språkväxlare: fast placering uppe till höger ---------- */
+    .lang-switch {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ---------- Flaggknappar ---------- */
+    .lang-switch button {
+      padding: 0;
+      width: 44px;
+      height: 30px;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      background: none;
+      cursor: pointer;
+      opacity: 0.55;
+      overflow: hidden;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+    .lang-switch button:hover { opacity: 0.85; }
+    .lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    /* Markerar den valda flaggan */
+    .lang-switch button[aria-pressed="true"] { opacity: 1; border-color: var(--accent); }
+    .lang-switch svg { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+
+  <!-- Språkväxlare: svensk och brittisk flagga som inbäddad SVG
+       (flaggemojis visas inte på Windows) -->
+  <div class="lang-switch">
+    <!-- Svensk flagga -->
+    <button type="button" data-lang="sv" aria-label="Svenska" aria-pressed="true">
+      <svg viewBox="0 0 16 10" preserveAspectRatio="none" aria-hidden="true">
+        <rect width="16" height="10" fill="#006aa7"/>
+        <rect x="5" width="2" height="10" fill="#fecc00"/>
+        <rect y="4" width="16" height="2" fill="#fecc00"/>
+      </svg>
+    </button>
+    <!-- Brittisk flagga (Union Jack) -->
+    <button type="button" data-lang="en" aria-label="English" aria-pressed="false">
+      <svg viewBox="0 0 60 30" preserveAspectRatio="none" aria-hidden="true">
+        <rect width="60" height="30" fill="#012169"/>
+        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" stroke-width="2"/>
+        <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+        <path d="M30,0 V30 M0,15 H60" stroke="#c8102e" stroke-width="6"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Huvudinnehåll: texten byts av JavaScript via data-i18n -->
+  <main>
+    <h1 data-i18n="title">Välkommen till AI-kursen</h1>
+    <p data-i18n="subtitle">Kul att du är här. Nu börjar resan!</p>
+  </main>
+
+  <script>
+    // ---------- Översättningar: nyckel -> text per språk ----------
+    const translations = {
+      sv: {
+        title: "Välkommen till AI-kursen",
+        subtitle: "Kul att du är här. Nu börjar resan!",
+        pageTitle: "AI-kursen"
+      },
+      en: {
+        title: "Welcome to the AI course",
+        subtitle: "Great to have you here. The journey starts now!",
+        pageTitle: "The AI course"
+      }
+    };
+
+    const STORAGE_KEY = "lang";   // nyckel för localStorage
+    const DEFAULT_LANG = "sv";    // standardspråk
+
+    // Byter språk: uppdaterar texter, <html lang>, sidtitel, flaggmarkering och sparar valet
+    function setLanguage(lang) {
+      if (!translations[lang]) lang = DEFAULT_LANG;
+      document.documentElement.lang = lang;
+      document.title = translations[lang].pageTitle;
+
+      // Byt text i alla element som har data-i18n
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        el.textContent = translations[lang][el.dataset.i18n];
+      });
+
+      // Markera vald flagga (styr utseende och hjälpmedel)
+      document.querySelectorAll(".lang-switch button").forEach(btn => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
+      });
+
+      // Spara valet; ignorera fel om lagring är blockerad
+      try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+    }
+
+    // Klick på en flagga byter språk
+    document.querySelectorAll(".lang-switch button").forEach(btn => {
+      btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+    });
+
+    // Vid sidladdning: använd sparat språk, annars svenska
+    let saved = DEFAULT_LANG;
+    try { saved = localStorage.getItem(STORAGE_KEY) || DEFAULT_LANG; } catch (e) {}
+    setLanguage(saved);
+  </script>
+</body>
+</html>

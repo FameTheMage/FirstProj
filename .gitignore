@@ -1,0 +1,15 @@
+# Operativsystemfiler
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editorfiler
+.vscode/
+.idea/
+*.swp
+
+# Beroenden (om de skulle läggas till senare)
+node_modules/
+
+# Loggar
+*.log
