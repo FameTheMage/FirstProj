@@ -1,20 +1,55 @@
 <!DOCTYPE html>
-<!-- Startsida för AI-kursen. Tvåspråkig (svenska/engelska), mörkt tema. -->
-<html lang="sv">
+<!-- Startsida för AI-kursen. Tvåspråkig (svenska/engelska) med tre färgteman (mörkt, ljust, regnbåge). Responsiv. -->
+<html lang="sv" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <!-- Gör sidan responsiv på mobila enheter -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Gör sidan responsiv på mobila enheter (viewport-fit=cover för skårade skärmar) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AI-kursen</title>
 
+  <!-- Sätter sparat tema direkt, före målning, så att sidan inte blinkar.
+       Första besöket följer systemets färgschema, annars mörkt. -->
+  <script>
+    (function () {
+      var theme = "dark";
+      try {
+        var saved = localStorage.getItem("theme");
+        if (saved === "dark" || saved === "light" || saved === "rainbow") theme = saved;
+        else if (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) theme = "light";
+      } catch (e) {}
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+
   <style>
-    /* ---------- Färgvariabler (mörkt tema) ---------- */
+    /* ---------- Färgvariabler: mörkt tema (standard) ---------- */
     :root {
-      --bg: #0b0f1a;        /* sidans bakgrund */
+      --page-bg: radial-gradient(circle at 50% 30%, #16213a 0%, #0b0f1a 60%); /* sidans bakgrund */
       --text: #e6e9f2;      /* huvudtext */
       --muted: #9aa3b8;     /* dämpad text */
       --accent: #38bdf8;    /* accentfärg (cyan) */
       --accent2: #a78bfa;   /* andra accentfärg (lila) */
+      color-scheme: dark;
+    }
+
+    /* ---------- Färgvariabler: ljust tema ---------- */
+    [data-theme="light"] {
+      --page-bg: radial-gradient(circle at 50% 30%, #ffffff 0%, #e8edf6 70%);
+      --text: #1a2033;
+      --muted: #4b5563;
+      --accent: #0369a1;
+      --accent2: #7c3aed;
+      color-scheme: light;
+    }
+
+    /* ---------- Färgvariabler: färgrikt tema (regnbåge) ---------- */
+    [data-theme="rainbow"] {
+      --page-bg: linear-gradient(135deg, #ff5f6d, #ffc371, #f7f06d, #6ee7a1, #4facfe, #a78bfa);
+      --text: #1b1033;
+      --muted: #3b2f5c;
+      --accent: #c026d3;
+      --accent2: #2563eb;
+      color-scheme: light;
     }
 
     /* ---------- Grundlayout: centrerar innehållet på skärmen ---------- */
@@ -22,35 +57,49 @@
     body {
       margin: 0;
       min-height: 100vh;
+      min-height: 100dvh;   /* räknar bort mobilens adressfält */
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 2rem;
-      background: radial-gradient(circle at 50% 30%, #16213a 0%, var(--bg) 60%);
+      /* Extra utrymme upptill så att knapparna inte täcker innehållet; safe-area för skårade skärmar */
+      padding: calc(4.5rem + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
+               calc(2rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left));
+      background: var(--page-bg);
+      background-attachment: fixed;
       color: var(--text);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: color 0.3s;
+    }
+
+    /* ---------- Innehållsyta: samma layout i alla teman (ingen box/panel) ---------- */
+    main {
+      max-width: 40rem;
+      padding: 1.5rem 2rem;
     }
 
     /* ---------- Rubrik med gradienttext ---------- */
     h1 {
       margin: 0 0 1rem;
       font-size: clamp(2rem, 6vw, 4rem);
+      overflow-wrap: anywhere;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
-    p { margin: 0; font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--muted); }
+    p { margin: 0; font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--muted); overflow-wrap: anywhere; }
 
-    /* ---------- Språkväxlare: fast placering uppe till höger ---------- */
-    .lang-switch {
+    /* ---------- Växlare: fast placering uppe (språk till höger, tema till vänster) ---------- */
+    .lang-switch, .theme-switch {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
+      top: calc(1rem + env(safe-area-inset-top));
       display: flex;
+      align-items: center;
       gap: 0.5rem;
     }
+    .lang-switch  { right: calc(1rem + env(safe-area-inset-right)); }
+    .theme-switch { left:  calc(1rem + env(safe-area-inset-left)); }
 
     /* ---------- Flaggknappar ---------- */
     .lang-switch button {
@@ -70,9 +119,64 @@
     /* Markerar den valda flaggan */
     .lang-switch button[aria-pressed="true"] { opacity: 1; border-color: var(--accent); }
     .lang-switch svg { display: block; width: 100%; height: 100%; }
+
+    /* ---------- Temaknappar: runda färgprickar (44 px träffyta för touch) ---------- */
+    .theme-switch button {
+      padding: 0;
+      width: 44px;
+      height: 44px;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+    .theme-switch button:hover { opacity: 1; }
+    .theme-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    /* Markerar det valda temat */
+    .theme-switch button[aria-pressed="true"] { opacity: 1; border-color: var(--accent); }
+    /* Själva färgpricken inuti knappen */
+    .theme-switch .dot {
+      display: block;
+      width: 26px;
+      height: 26px;
+      margin: auto;
+      border-radius: 50%;
+      border: 1px solid rgba(128, 128, 128, 0.6);
+    }
+    .dot-dark    { background: #0b0f1a; }
+    .dot-light   { background: #f5f7fb; }
+    .dot-rainbow { background: conic-gradient(#ff5f6d, #ffc371, #f7f06d, #6ee7a1, #4facfe, #a78bfa, #ff5f6d); }
+
+    /* ---------- Mindre skärmar: tätare marginaler ---------- */
+    @media (max-width: 480px) {
+      body { padding-left: calc(1rem + env(safe-area-inset-left)); padding-right: calc(1rem + env(safe-area-inset-right)); }
+      main { padding: 1rem; }
+    }
+
+    /* ---------- Liggande mobil (låg skärm): mindre marginaler, innehållet kan scrolla ---------- */
+    @media (orientation: landscape) and (max-height: 500px) {
+      body { padding-top: calc(3.75rem + env(safe-area-inset-top)); padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+      main { padding: 0.75rem 1.5rem; }
+      h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); margin-bottom: 0.5rem; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Temaväxlare: tre färgprickar (mörkt, ljust, regnbåge) uppe till vänster -->
+  <div class="theme-switch">
+    <button type="button" data-theme-btn="dark" data-i18n-aria="themeDark" aria-label="Mörkt tema" aria-pressed="true">
+      <span class="dot dot-dark" aria-hidden="true"></span>
+    </button>
+    <button type="button" data-theme-btn="light" data-i18n-aria="themeLight" aria-label="Ljust tema" aria-pressed="false">
+      <span class="dot dot-light" aria-hidden="true"></span>
+    </button>
+    <button type="button" data-theme-btn="rainbow" data-i18n-aria="themeRainbow" aria-label="Färgrikt tema" aria-pressed="false">
+      <span class="dot dot-rainbow" aria-hidden="true"></span>
+    </button>
+  </div>
 
   <!-- Språkväxlare: svensk och brittisk flagga som inbäddad SVG
        (flaggemojis visas inte på Windows) -->
@@ -109,17 +213,25 @@
       sv: {
         title: "Välkommen till AI-kursen",
         subtitle: "Kul att du är här. Nu börjar resan!",
-        pageTitle: "AI-kursen"
+        pageTitle: "AI-kursen",
+        themeDark: "Mörkt tema",
+        themeLight: "Ljust tema",
+        themeRainbow: "Färgrikt tema"
       },
       en: {
         title: "Welcome to the AI course",
         subtitle: "Great to have you here. The journey starts now!",
-        pageTitle: "The AI course"
+        pageTitle: "The AI course",
+        themeDark: "Dark theme",
+        themeLight: "Light theme",
+        themeRainbow: "Colourful theme"
       }
     };
 
-    const STORAGE_KEY = "lang";   // nyckel för localStorage
-    const DEFAULT_LANG = "sv";    // standardspråk
+    const STORAGE_KEY = "lang";          // nyckel för localStorage (språk)
+    const THEME_KEY = "theme";           // nyckel för localStorage (tema)
+    const DEFAULT_LANG = "sv";           // standardspråk
+    const THEMES = ["dark", "light", "rainbow"]; // tillgängliga teman
 
     // Byter språk: uppdaterar texter, <html lang>, sidtitel, flaggmarkering och sparar valet
     function setLanguage(lang) {
@@ -132,6 +244,13 @@
         el.textContent = translations[lang][el.dataset.i18n];
       });
 
+      // Översätt aria-label och tooltip på temaknapparna
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+        const label = translations[lang][el.dataset.i18nAria];
+        el.setAttribute("aria-label", label);
+        el.title = label;
+      });
+
       // Markera vald flagga (styr utseende och hjälpmedel)
       document.querySelectorAll(".lang-switch button").forEach(btn => {
         btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
@@ -141,15 +260,39 @@
       try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
     }
 
+    // Byter färgtema: sätter data-theme, markerar vald knapp och sparar valet
+    function setTheme(theme) {
+      if (!THEMES.includes(theme)) theme = "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+
+      document.querySelectorAll(".theme-switch button").forEach(btn => {
+        btn.setAttribute("aria-pressed", String(btn.dataset.themeBtn === theme));
+      });
+
+      try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    }
+
     // Klick på en flagga byter språk
     document.querySelectorAll(".lang-switch button").forEach(btn => {
       btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+    });
+
+    // Klick på en färgprick byter tema
+    document.querySelectorAll(".theme-switch button").forEach(btn => {
+      btn.addEventListener("click", () => setTheme(btn.dataset.themeBtn));
     });
 
     // Vid sidladdning: använd sparat språk, annars svenska
     let saved = DEFAULT_LANG;
     try { saved = localStorage.getItem(STORAGE_KEY) || DEFAULT_LANG; } catch (e) {}
     setLanguage(saved);
+
+    // Vid sidladdning: temat är redan satt av skriptet i <head>; synka bara knapparnas markering.
+    // (Sparas inte här, så första besökets systemval förblir ett förval tills användaren väljer.)
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    document.querySelectorAll(".theme-switch button").forEach(btn => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.themeBtn === currentTheme));
+    });
   </script>
 </body>
 </html>
